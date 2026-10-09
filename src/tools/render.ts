@@ -34,7 +34,7 @@ function imageRefFromValue(image: ImageValue): ImageAttachmentRef {
 export function applyCadRender(deps: CadToolDeps): void {
   deps.ctx.tools.register(defineTool({
     name: 'cad_render',
-    description: 'Render CadQuery Python modeling code to a design preview (PNG when possible, SVG always) and geometry facts (volume, bounding box, validity). Returns the preview as an image when the current model supports image input; otherwise returns file paths and facts so you can still self-check numbers. Use this to visually check a design before calling cad_export. The script must assign the model to a top-level `result` variable.',
+    description: 'Render CadQuery Python modeling code to a design preview (PNG when possible, SVG always) and geometry facts (volume, bounding box, validity). This single call both EXECUTES and VALIDATES the code — do not follow it with cad_validate on the same code. Returns the preview as an image when the current model supports image input; otherwise returns file paths and facts so you can still self-check numbers. Use this to visually check a design before calling cad_export. The script must assign the model to a top-level `result` variable.',
     parameters: {
       code: { type: 'string', required: true, description: 'CadQuery Python source. Must assign the final model to a top-level `result` variable (Workplane/Shape/list), or define `model()`.' },
     },

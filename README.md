@@ -24,8 +24,8 @@ Backends are pluggable **adapters** behind a capability-routing registry. v0.1 s
 
   ```sh
   pip install cadquery
-  # optional, for raster PNG previews:
-  pip install cairosvg
+  # optional, for raster PNG previews (self-contained wheels, no native DLLs):
+  pip install matplotlib
   ```
 
   Run `cad_doctor` after installing the plugin — it probes the machine and prints a capability matrix with install hints.

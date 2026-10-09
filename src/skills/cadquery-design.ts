@@ -28,13 +28,23 @@ headlessly. The runner is NOT a REPL and NOT a notebook.
 ## Iteration workflow
 
 1. Write the script.
-2. Call \`cad_validate\` — fix every error until \`valid: true\`.
-3. Call \`cad_render\` — read the geometry facts (volume, bbox) and, when an
-   image is attached, LOOK at the preview. Check: is the overall size right
-   (bbox.size)? Are holes/fillets where they belong?
+2. Call \`cad_render\` — it EXECUTES the code, checks geometry validity, and
+   returns facts (volume, bbox) plus a preview. Treat its output as the
+   validation: \`valid_geometry: false\` or a thrown error means fix and retry.
+3. Read the facts and, when an image is attached, LOOK at the preview. Check:
+   is the overall size right (bbox.size)? Are holes/fillets where they belong?
 4. Fix and re-render until correct.
 5. Call \`cad_export\` with the target format (STEP for machining/exchange,
    STL/3MF for 3D printing, IGES for legacy CAM).
+
+Do NOT do redundant work — every CadQuery execution costs seconds:
+- \`cad_render\` already executes and validates the code. NEVER call
+  \`cad_validate\` on code you just rendered successfully; reserve it for
+  quick syntax checks when you do NOT want a preview.
+- Do NOT \`write\` the script to a file before rendering — \`cad_render\`
+  saves the executed script into its own artifact directory (reported as
+  \`scriptPath\`). Only write a file when the user explicitly asks for the
+  source as a deliverable.
 
 ## Reliability rules (learned from production failures)
 

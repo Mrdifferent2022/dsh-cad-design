@@ -43,7 +43,7 @@ async function fileExists(path: string): Promise<boolean> {
 export function applyCadExport(deps: CadToolDeps): void {
   deps.ctx.tools.register(defineTool({
     name: 'cad_export',
-    description: 'Export CadQuery Python modeling code to a manufacturing file: STEP (machining/assembly exchange), IGES (legacy CAM), STL or 3MF (3D printing). Validate the design with cad_render first. Refuses to overwrite an existing file unless overwrite is true. The script must assign the model to a top-level `result` variable.',
+    description: 'Export CadQuery Python modeling code to a manufacturing file: STEP (machining/assembly exchange), IGES (legacy CAM), STL or 3MF (3D printing). Validate the design with cad_render first. The result already contains the absolute output path, byte size, and geometry facts — do NOT re-verify the file with shell commands. Refuses to overwrite an existing file unless overwrite is true. The script must assign the model to a top-level `result` variable.',
     parameters: {
       code: { type: 'string', required: true, description: 'CadQuery Python source. Must assign the final model to a top-level `result` variable (Workplane/Shape/list), or define `model()`.' },
       format: { type: 'string', enum: [...EXPORT_FORMATS], required: true, description: 'Export format. STEP for machining and CAD exchange, STL/3MF for 3D printing, IGES for legacy CAM.' },

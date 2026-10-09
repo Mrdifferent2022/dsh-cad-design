@@ -12,7 +12,7 @@ export interface CadQueryAdapterOptions {
 
 const INSTALL_HINT = 'Install Python 3.10+ and run: pip install cadquery '
   + '(conda: conda install -c conda-forge cadquery). '
-  + 'Optional: pip install cairosvg for raster PNG previews.'
+  + 'Optional: pip install matplotlib for raster PNG previews.'
 
 /**
  * CadQuery backend: Python parametric modeling on the OpenCASCADE kernel.

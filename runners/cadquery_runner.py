@@ -166,13 +166,124 @@ def render_svg(result, svg_out):
         raise RuntimeError("SVG export produced no output")
 
 
-def render_png_from_svg(svg_path, png_out):
-    """Best-effort rasterization of the SVG preview; requires cairosvg."""
-    import cairosvg  # optional dependency
+def render_png_from_svg(svg_path, png_out, width=800):
+    """SVG → PNG via pip-installable rasterizers (cairosvg, then svglib).
 
-    cairosvg.svg2png(url=svg_path, write_to=png_out, output_width=800, background_color="white")
+    NOTE: on plain Windows Pythons both usually fail — cairosvg and
+    rlPyCairo need the native libcairo DLL that pip wheels do not ship.
+    The matplotlib tessellation path below is the reliable fallback there.
+    Raises the LAST error when neither works.
+    """
+    last_error = None
+    try:
+        import cairosvg  # optional dependency
+
+        cairosvg.svg2png(url=svg_path, write_to=png_out, output_width=width,
+                         background_color="white")
+    except Exception as e:  # noqa: BLE001
+        last_error = e
+    else:
+        if os.path.isfile(png_out) and os.path.getsize(png_out) > 0:
+            return
+
+    try:
+        from svglib.svglib import svg2rlg
+        from reportlab.graphics import renderPM
+
+        drawing = svg2rlg(svg_path)
+        if drawing is None:
+            raise RuntimeError("svglib could not parse the SVG")
+        scale = width / drawing.width if drawing.width else 1.0
+        drawing.width *= scale
+        drawing.height *= scale
+        drawing.scale(scale, scale)
+        renderPM.drawToFile(drawing, png_out, fmt="PNG", bg=0xFFFFFF)
+    except Exception as e:  # noqa: BLE001
+        last_error = e
+    else:
+        if os.path.isfile(png_out) and os.path.getsize(png_out) > 0:
+            return
+
+    raise RuntimeError(str(last_error))
+
+
+def render_png_matplotlib(shapes, png_out, width=800):
+    """PNG preview by tessellating the B-rep and drawing a 3D view.
+
+    matplotlib ships self-contained pip wheels on Windows, so this path has
+    no native-DLL problems — unlike every SVG rasterizer. The trade-off: it
+    is a mesh view (like an STL viewer), while the SVG is a faithful vector
+    projection; both are produced so the caller can pick.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    clouds = []
+    meshes = []
+    for shape in shapes:
+        try:
+            bbox = shape.BoundingBox()
+            diag = max(bbox.xlen, bbox.ylen, bbox.zlen)
+            tolerance = max(0.05, diag / 200.0)
+            verts, triangles = shape.tessellate(tolerance)
+        except Exception:
+            continue
+        pts = np.array([[v.x, v.y, v.z] for v in verts], dtype=float)
+        if pts.size == 0 or len(triangles) == 0:
+            continue
+        clouds.append(pts)
+        meshes.append((pts, np.array(triangles, dtype=int)))
+
+    if not meshes:
+        raise RuntimeError("no tessellatable geometry for PNG preview")
+
+    fig = plt.figure(figsize=(width / 100.0, width * 0.75 / 100.0), dpi=100)
+    ax = fig.add_subplot(111, projection="3d")
+    for pts, triangles in meshes:
+        ax.plot_trisurf(
+            pts[:, 0], pts[:, 1], pts[:, 2],
+            triangles=triangles, color="#7fa8d0", edgecolor="none", shade=True,
+        )
+
+    # Equal aspect around the combined bounding box, isometric-ish view.
+    cloud = np.vstack(clouds)
+    mins, maxs = cloud.min(axis=0), cloud.max(axis=0)
+    center = (mins + maxs) / 2.0
+    half = max(float((maxs - mins).max()) / 2.0, 1e-6)
+    ax.set_xlim(center[0] - half, center[0] + half)
+    ax.set_ylim(center[1] - half, center[1] + half)
+    ax.set_zlim(center[2] - half, center[2] + half)
+    try:
+        ax.set_box_aspect((1, 1, 1))
+    except Exception:
+        pass
+    ax.view_init(elev=25, azim=-60)
+    ax.set_axis_off()
+    fig.savefig(png_out, dpi=100, bbox_inches="tight", pad_inches=0.05,
+                facecolor="white")
+    plt.close(fig)
     if not os.path.isfile(png_out) or os.path.getsize(png_out) == 0:
-        raise RuntimeError("PNG rasterization produced no output")
+        raise RuntimeError("matplotlib render produced no output")
+
+
+def render_png(shapes, svg_path, png_out):
+    """Raster preview: SVG rasterizers first, matplotlib mesh view as the
+    dependency-free fallback. Raises the last error when everything fails."""
+    svg_error = None
+    if svg_path:
+        try:
+            render_png_from_svg(svg_path, png_out)
+            return
+        except Exception as e:  # noqa: BLE001
+            svg_error = e
+    try:
+        render_png_matplotlib(shapes, png_out)
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(
+            f"no working PNG renderer (svg: {svg_error}; matplotlib: {e})"
+        ) from e
 
 
 def run_job(job):
@@ -279,10 +390,10 @@ def run_job(job):
             warn_buffer.append(f"SVG preview skipped: {e}")
     if png_out and svg_ok:
         try:
-            render_png_from_svg(svg_out, png_out)
+            render_png(shapes, svg_out, png_out)
             base["png"] = png_out
         except Exception as e:  # noqa: BLE001
-            # A missing optional cairosvg is an expected degradation, not a failure.
+            # A missing optional renderer is an expected degradation, not a failure.
             warn_buffer.append(f"PNG preview skipped: {e}")
     if not svg_ok:
         return {"success": False, "error": "preview render failed", "warnings": warn_buffer}

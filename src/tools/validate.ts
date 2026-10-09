@@ -17,7 +17,7 @@ export function factsToJson(facts: object): Record<string, JsonLike> {
 export function applyCadValidate(deps: CadToolDeps): void {
   deps.ctx.tools.register(defineTool({
     name: 'cad_validate',
-    description: 'Validate CadQuery Python modeling code without exporting anything. Executes the script and checks the produced geometry. Returns valid:false with errors for bad code or invalid solids — fix the code and retry. Requires the script to assign the model to a top-level `result` variable.',
+    description: 'Validate CadQuery Python modeling code without rendering a preview. Prefer cad_render for design iteration — it executes, validates, AND previews in one call; use cad_validate only for a quick syntax/geometry check when no preview is wanted. Returns valid:false with errors for bad code or invalid solids — fix the code and retry. Requires the script to assign the model to a top-level `result` variable.',
     parameters: {
       code: { type: 'string', required: true, description: 'CadQuery Python source. Must assign the final model to a top-level `result` variable (Workplane/Shape/list), or define `model()`.' },
     },

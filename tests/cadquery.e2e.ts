@@ -46,7 +46,7 @@ describe.skipIf(!status.available)('cadquery e2e (real backend)', () => {
     }
   })
 
-  it('render produces an SVG preview', async () => {
+  it('render produces an SVG preview (and PNG when a rasterizer is installed)', async () => {
     const work = await makeWork(
       'result = cq.Workplane("XY").box(10, 10, 10).faces(">Z").hole(4)\n',
     )
@@ -56,6 +56,13 @@ describe.skipIf(!status.available)('cadquery e2e (real backend)', () => {
         new AbortController().signal,
       )
       expect(result.svgPath).toBe(work.svgPath)
+      // PNG requires cairosvg or svglib+reportlab; when neither is installed
+      // the runner must say so instead of failing the render.
+      if (result.pngPath === undefined) {
+        expect(result.warnings.join('\n')).toMatch(/PNG preview skipped/)
+      } else {
+        expect(result.pngPath).toBe(work.pngPath)
+      }
     } finally {
       await rm(work.dir, { recursive: true, force: true })
     }
