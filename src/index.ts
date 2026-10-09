@@ -1,11 +1,11 @@
 /**
- * dsh-cad — parametric CAD tools for the DeepSeek Harness.
+ * dsh-cad-design — parametric CAD tools for the DeepSeek Harness.
  *
  * Registers cad_doctor / cad_validate / cad_render / cad_export plus the
  * cadquery-design skill. Backends are adapters behind a capability-routing
  * registry; `Config.backendPriority` reorders routing and each adapter has
  * an `enabled` switch, so users steer which CAD engine serves a request.
- * @module dsh-cad
+ * @module dsh-cad-design
  */
 
 import type { Context } from '@deepseek-ai/cordis'
@@ -24,7 +24,7 @@ import {
   CADQUERY_DESIGN_SKILL_NAME,
 } from './skills/cadquery-design.ts'
 
-export const name = 'dsh-cad'
+export const name = 'dsh-cad-design'
 // attachments and llm are OPTIONAL services: cad_render probes them with
 // ctx.get() and degrades to text when absent. Never hard-inject them.
 export const inject = ['tools', 'skills']

@@ -22,7 +22,7 @@ export class AdapterRegistry {
   /** Register an adapter; duplicate ids throw. */
   register(adapter: CadAdapter): void {
     if (this.adapters.some(existing => existing.id === adapter.id)) {
-      throw new Error(`dsh-cad: duplicate adapter id "${adapter.id}"`)
+      throw new Error(`dsh-cad-design: duplicate adapter id "${adapter.id}"`)
     }
     this.adapters.push(adapter)
   }

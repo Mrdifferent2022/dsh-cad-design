@@ -1,5 +1,5 @@
 {
-  "name": "dsh-cad",
+  "name": "dsh-cad-design",
   "description": "Parametric CAD tools for the DeepSeek Harness: CadQuery modeling, STEP export, and design preview",
   "version": "0.1.0",
   "license": "MIT",

@@ -1,4 +1,4 @@
-# dsh-cad
+# dsh-cad-design
 
 Parametric CAD tools for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) — let your agent design mechanical parts: write CadQuery code, validate the geometry, render a preview, and export manufacturing files (STEP / IGES / STL / 3MF).
 
@@ -33,13 +33,15 @@ Backends are pluggable **adapters** behind a capability-routing registry. v0.1 s
 ## Install
 
 ```sh
-dsh plugin --profile web add dsh-cad
+dsh plugin --profile web add dsh-cad-design
 dsh web
 ```
 
 `dsh plugin` requires an explicit `--profile`; target a profile that carries a surface bundle. The shipped `web` profile (base + web-app) is the usual choice — a fresh custom profile created by `dsh plugin --profile <custom> add` contains only `@deepseek-ai/dsh-base` (headless, no UI). Boot any profile as `dsh --profile <name>` with **no** surface argument; the surface comes from the profile's bundle list.
 
-Or from a tarball: `dsh plugin --profile web add ./dsh-cad-0.1.0.tgz`
+Or from a tarball: `dsh plugin --profile web add ./dsh-cad-design-0.1.0.tgz`
+
+> **Name note:** npm also hosts [`dsh-cad`](https://www.npmjs.com/package/dsh-cad), a CAD *viewer* plugin by LAU-MARS (STL/OBJ/STEP/DXF preview cards in the Web UI). The two are complementary, not competing — `dsh-cad-design` creates and exports the models, `dsh-cad` can display them. This package was renamed to `dsh-cad-design` to keep both installable side by side.
 
 ## Tools
 
@@ -59,7 +61,7 @@ Config lives in your profile's `cordis.patch.yml` (whole-line replace semantics 
 ```yaml
 - insert:
     - id: cad-tools
-      name: dsh-cad
+      name: dsh-cad-design
       config:
         workDir: ''               # default: <session cwd>/.dsh/cad
         timeoutSeconds: 120
@@ -111,7 +113,7 @@ MIT
 让 dsh 智能体做机械设计：编写 CadQuery 参数化建模代码 → 校验几何 → 渲染预览 → 导出制造格式（STEP/IGES/STL/3MF）。
 
 - **安装前置**：Python 3.10+，`pip install cadquery`（可选 `pip install cairosvg` 用于 PNG 预览）
-- **安装插件**：`dsh plugin --profile web add dsh-cad`，然后 `dsh web` 启动。注意必须显式指定 `--profile`，且目标 profile 要带有界面 bundle——新自定义 profile 默认只含 dsh-base（无界面、静默运行）；启动用 `dsh --profile <名字>`，不要带 `web` 参数。装完先用 `cad_doctor` 做环境自检
+- **安装插件**：`dsh plugin --profile web add dsh-cad-design`，然后 `dsh web` 启动。注意必须显式指定 `--profile`，且目标 profile 要带有界面 bundle——新自定义 profile 默认只含 dsh-base（无界面、静默运行）；启动用 `dsh --profile <名字>`，不要带 `web` 参数。装完先用 `cad_doctor` 做环境自检。（注意区分：npm 上另有 LAU-MARS 的 [`dsh-cad`](https://www.npmjs.com/package/dsh-cad)——CAD 查看器插件，与本包互补：本包负责建模出图，它负责在 Web 界面里看图）
 - **后端架构**：adapter 注册表 + 能力路由。v0.1 自带 CadQuery（OpenCASCADE 内核，原生 STEP）；OpenSCAD、ezdxf、FreeCAD 在路线图上；商业 CAD（SolidWorks/NX/CATIA/AutoCAD/中望/浩辰）通过中性格式（STEP/IGES/DXF）互操作，进程内桥接预留为独立插件包
 - **路由与开关**：`backendPriority` 控制多个后端同时可用时的优先级；`cadquery.enabled` 可整体关闭某个后端；`pythonPath` / `DSH_CAD_PYTHON` 指定解释器
 - **注意**：工具会在本机执行 Python 代码（参数化 CAD 的工作方式），共享部署请配合 dsh 的 `tools/pre-execute` 权限门禁

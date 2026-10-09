@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-CadQuery job runner for the dsh-cad plugin.
+CadQuery job runner for the dsh-cad-design plugin.
 
 The Node side spawns this script as:
 
