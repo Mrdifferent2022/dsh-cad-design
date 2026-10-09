@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="4" y="4" width="56" height="56" rx="12" fill="#1e3a5f"/>
+  <!-- isometric cube -->
+  <g stroke="#7fd4ff" stroke-width="2.5" stroke-linejoin="round" fill="none">
+    <path d="M32 14 L50 24 L50 42 L32 52 L14 42 L14 24 Z" fill="#2c5a8a"/>
+    <path d="M32 14 L32 33"/>
+    <path d="M14 24 L32 33 L50 24"/>
+    <path d="M32 33 L32 52" stroke-opacity="0.45"/>
+  </g>
+  <!-- dimension lines -->
+  <g stroke="#ffd166" stroke-width="1.6" fill="none">
+    <path d="M14 47 L32 57 M14 44 L14 49 M32 54 L32 59"/>
+    <path d="M50 47 L38 53 M50 44 L50 49" stroke-opacity="0.8"/>
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "CAD Tools",
+    "description": "Parametric mechanical CAD: CadQuery modeling, STEP/STL export, and design preview. Requires Python with CadQuery installed."
+  }
+}

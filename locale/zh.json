@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "CAD 工具",
+    "description": "参数化机械 CAD：CadQuery 建模、STEP/STL 导出与设计预览。需要本机安装 Python 与 CadQuery。"
+  }
+}

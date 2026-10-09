@@ -1,0 +1,8 @@
+# Local development patch: loads the TypeScript source directly.
+# Usage (from the deepseek-harness checkout):
+#   pnpm dsh web --patch C:/wangjianjun/700.ClaudecodeProject/dsh-cad/cordis.dev.yml
+# The plugin path must be absolute.
+- insert:
+    - id: cad-tools
+      name: 'C:/wangjianjun/700.ClaudecodeProject/dsh-cad/src/index.ts'
+      config: {}

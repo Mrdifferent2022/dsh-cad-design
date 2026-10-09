@@ -1,0 +1,7 @@
+# Published bundle patch: references the installed npm package by name.
+# `dsh plugin add dsh-cad` appends this package to the profile's bundle list,
+# and the loader resolves `dsh-cad` through Node package resolution.
+- insert:
+    - id: cad-tools
+      name: dsh-cad
+      config: {}
