@@ -3,6 +3,13 @@
   "description": "Parametric CAD tools for the DeepSeek Harness: CadQuery modeling, STEP export, and design preview",
   "version": "0.1.0",
   "license": "MIT",
+  "author": "Mrdifferent2022 (https://github.com/Mrdifferent2022)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mrdifferent2022/dsh-cad.git"
+  },
+  "homepage": "https://github.com/Mrdifferent2022/dsh-cad#readme",
+  "bugs": "https://github.com/Mrdifferent2022/dsh-cad/issues",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
