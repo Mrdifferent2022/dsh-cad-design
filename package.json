@@ -42,10 +42,10 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.0",
-    "@deepseek-ai/dsh-attachment": "^0.0.1-rc.1",
-    "@deepseek-ai/dsh-llm": "^0.0.1-rc.1",
-    "@deepseek-ai/dsh-skill": "^0.0.1-rc.1",
-    "@deepseek-ai/dsh-tools": "^0.0.1-rc.1"
+    "@deepseek-ai/dsh-attachment": ">=0.0.1-rc.1 <1.0.0",
+    "@deepseek-ai/dsh-llm": ">=0.0.1-rc.1 <1.0.0",
+    "@deepseek-ai/dsh-skill": ">=0.0.1-rc.1 <1.0.0",
+    "@deepseek-ai/dsh-tools": ">=0.0.1-rc.1 <1.0.0"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.4",
