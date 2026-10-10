@@ -7,7 +7,7 @@ import {
   imageValueFromRef,
   isImageCapableRoute,
   prepareWorkDir,
-  requireAdapter,
+  requireAdapterForCode,
   type CadToolDeps,
   type ImageValue,
 } from './shared.ts'
@@ -34,9 +34,10 @@ function imageRefFromValue(image: ImageValue): ImageAttachmentRef {
 export function applyCadRender(deps: CadToolDeps): void {
   deps.ctx.tools.register(defineTool({
     name: 'cad_render',
-    description: 'Render CadQuery Python modeling code to a design preview (PNG when possible, SVG always) and geometry facts (volume, bounding box, validity). This single call both EXECUTES and VALIDATES the code — do not follow it with cad_validate on the same code. Returns the preview as an image when the current model supports image input; otherwise returns file paths and facts so you can still self-check numbers. Use this to visually check a design before calling cad_export. The script must assign the model to a top-level `result` variable.',
+    description: 'Render CAD Python code to a design preview (PNG when possible, SVG always) plus geometry facts: CadQuery (3D solids — volume, bounding box, validity) or ezdxf (2D DXF drawings — entity count, layers), auto-detected from the script\'s imports or forced with the backend parameter. This single call both EXECUTES and VALIDATES the code — do not follow it with cad_validate on the same code. Returns the preview as an image when the current model supports image input; otherwise returns file paths and facts so you can still self-check numbers. Use this to visually check a design before calling cad_export. The script must assign the model/drawing to a top-level `result` variable.',
     parameters: {
-      code: { type: 'string', required: true, description: 'CadQuery Python source. Must assign the final model to a top-level `result` variable (Workplane/Shape/list), or define `model()`.' },
+      code: { type: 'string', required: true, description: 'CadQuery or ezdxf Python source. Must assign the final model/drawing to a top-level `result` variable (Workplane/Shape/list, or ezdxf Drawing/modelspace), or define `model()`.' },
+      backend: { type: 'string', description: 'Force a backend by id (cadquery, ezdxf). Default: auto-detect from the script\'s imports.' },
     },
     output: {
       schema: {
@@ -94,8 +95,8 @@ export function applyCadRender(deps: CadToolDeps): void {
     // Every call renders into its own timestamped directory.
     isConcurrencySafe: () => true,
     async execute(args, exec) {
-      if (args.code.trim() === '') throw new Error('code must be a non-empty CadQuery script')
-      const adapter = await requireAdapter(deps, { kind: 'preview' }, exec.signal)
+      if (args.code.trim() === '') throw new Error('code must be a non-empty CadQuery or ezdxf script')
+      const adapter = await requireAdapterForCode(deps, { kind: 'preview' }, args.code, args.backend, exec.signal)
       const work = await prepareWorkDir(deps, exec, args.code)
       const result = await adapter.run({
         mode: 'render',

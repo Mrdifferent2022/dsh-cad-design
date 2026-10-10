@@ -1,6 +1,6 @@
 # dsh-cad-design
 
-Parametric CAD tools for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) — let your agent design mechanical parts: write CadQuery code, validate the geometry, render a preview, and export manufacturing files (STEP / IGES / STL / 3MF).
+Parametric CAD tools for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) — let your agent do mechanical design: write CadQuery code for 3D parts or ezdxf code for 2D engineering drawings, validate the geometry, render a preview, and export manufacturing files (STEP / IGES / STL / 3MF / DXF).
 
 **English** | [中文](#中文说明)
 
@@ -15,16 +15,17 @@ Agent: loads the cadquery-design skill
      → cad_export    → retainer.step, ready for your CAM pipeline
 ```
 
-Backends are pluggable **adapters** behind a capability-routing registry. v0.1 ships the **CadQuery** adapter (OpenCASCADE kernel, native STEP). OpenSCAD, ezdxf (2D DXF), and FreeCAD adapters are on the roadmap; commercial CAD bridges (SolidWorks/NX/CATIA via COM, AutoCAD/ZWCAD/GstarCAD via console/LISP) are designed-for as separate future packages — the pragmatic meaning of "compatible with CATIA/SolidWorks/NX" is exchanging **STEP/IGES/DXF** files with them, which the adapter layer already targets.
+Backends are pluggable **adapters** behind a capability-routing registry: the **CadQuery** adapter (OpenCASCADE kernel, native STEP) for 3D solids and the **ezdxf** adapter for 2D DXF drawings (with battle-tested repairs for common LLM drafting defects: missing TEXT align points, CJK font fallback, white-on-white preview colors). Tools auto-detect the backend from your script's imports, or you can pin it with the `backend` parameter / `backendPriority` config. OpenSCAD and FreeCAD adapters are on the roadmap; commercial CAD bridges (SolidWorks/NX/CATIA via COM, AutoCAD/ZWCAD/GstarCAD via console/LISP) are designed-for as separate future packages — the pragmatic meaning of "compatible with CATIA/SolidWorks/NX" is exchanging **STEP/IGES/DXF** files with them, which the adapter layer already targets.
 
 ## Prerequisites
 
 - [dsh](https://github.com/deepseek-ai/deepseek-harness) `0.x`
-- Python 3.10+ with CadQuery:
+- Python 3.10+ with CadQuery and/or ezdxf (install whichever backend you need):
 
   ```sh
-  pip install cadquery
-  # optional, for raster PNG previews (self-contained wheels, no native DLLs):
+  pip install cadquery    # 3D solids → STEP/IGES/STL/3MF
+  pip install ezdxf matplotlib   # 2D drawings → DXF + previews
+  # optional, for raster PNG previews of 3D models (self-contained wheels, no native DLLs):
   pip install matplotlib
   ```
 
@@ -48,11 +49,11 @@ Or from a tarball: `dsh plugin --profile web add ./dsh-cad-design-0.1.0.tgz`
 | Tool | Purpose |
 |---|---|
 | `cad_doctor` | Probe all backends; report capability matrix + install hints. |
-| `cad_validate` | Execute CadQuery code and check geometry validity (`valid: false` is a domain result, not a crash). |
-| `cad_render` | Produce a preview (PNG when possible, SVG always) + geometry facts (volume, bbox, validity). Attaches the image when the current model supports image input; otherwise degrades to text + facts. |
-| `cad_export` | Export STEP / IGES / STL / 3MF. Never silently overwrites (`overwrite: true` to force). |
+| `cad_validate` | Execute CadQuery (3D) or ezdxf (2D) code and check validity (`valid: false` is a domain result, not a crash). Backend auto-detected from imports or pinned with `backend`. |
+| `cad_render` | Produce a preview (PNG when possible, SVG always) + facts (volume/bbox for 3D; entities/layers/repairs for 2D). Attaches the image when the current model supports image input; otherwise degrades to text + facts. |
+| `cad_export` | Export STEP / IGES / STL / 3MF (CadQuery) or DXF (ezdxf). Never silently overwrites (`overwrite: true` to force). |
 
-Plus the **`cadquery-design` skill** (auto-registered): the `result`-variable contract, mm units, Workplane selection rules, and a mechanical pattern library (cbore holes, nut traps, bolt-circle flanges, bearing seats, ribs, D-shaft bores).
+Plus two auto-registered skills: **`cadquery-design`** (the `result` contract, mm units, Workplane selection rules, mechanical pattern library: cbore holes, nut traps, bolt-circle flanges, bearing seats, ribs, D-shaft bores) and **`ezdxf-drafting`** (2D contract, layer/linetype conventions, CJK-safe text styles, dimension patterns, and the pitfalls the runner auto-repairs).
 
 ## Configuration
 
@@ -68,9 +69,13 @@ Config lives in your profile's `cordis.patch.yml` (whole-line replace semantics 
         enableSkill: true
         backendPriority:          # routing order when several backends qualify
           - cadquery
+          - ezdxf
         cadquery:
           enabled: true           # master switch for this backend
           pythonPath: ''          # absolute python.exe; empty = auto-detect
+        ezdxf:
+          enabled: true           # 2D DXF drafting backend
+          pythonPath: ''
 ```
 
 Environment variable `DSH_CAD_PYTHON` also overrides the interpreter.
@@ -97,9 +102,9 @@ pnpm dsh web --patch /absolute/path/to/dsh-cad/cordis.dev.yml
 
 ## Roadmap
 
-- **v0.2** — ezdxf adapter (2D DXF drafting with CJK font handling), OpenSCAD adapter, `cad_convert` (file→file)
+- **v0.2** — ✅ ezdxf adapter (2D DXF drafting with CJK font handling and TEXT repair); still to come: OpenSCAD adapter, `cad_convert` (file→file)
 - **v0.3** — FreeCAD adapter (GB-standard engineering drawings), DWG via ODA File Converter
-- **v1.0** — configurable routing priorities, richer facts (mass, inertia), larger pattern library
+- **v1.0** — richer facts (mass, inertia), larger pattern libraries, drawing templates
 - **later (separate packages)** — `dsh-cad-autocad` (accoreconsole/LISP), `dsh-cad-zwcad` / `dsh-cad-gstarcad` (COM-compatible), `dsh-cad-solidworks`, `dsh-cad-nx`
 
 ## License
@@ -110,10 +115,10 @@ MIT
 
 ## 中文说明
 
-让 dsh 智能体做机械设计：编写 CadQuery 参数化建模代码 → 校验几何 → 渲染预览 → 导出制造格式（STEP/IGES/STL/3MF）。
+让 dsh 智能体做机械设计：编写 CadQuery 参数化建模代码（3D 零件）或 ezdxf 代码（2D 工程图）→ 校验几何 → 渲染预览 → 导出制造格式（STEP/IGES/STL/3MF/DXF）。
 
-- **安装前置**：Python 3.10+，`pip install cadquery`（可选 `pip install cairosvg` 用于 PNG 预览）
+- **安装前置**：Python 3.10+；三维装 `pip install cadquery`，二维制图装 `pip install ezdxf matplotlib`（按需二选一或都装），PNG 预览用 `pip install matplotlib`
 - **安装插件**：`dsh plugin --profile web add dsh-cad-design`，然后 `dsh web` 启动。注意必须显式指定 `--profile`，且目标 profile 要带有界面 bundle——新自定义 profile 默认只含 dsh-base（无界面、静默运行）；启动用 `dsh --profile <名字>`，不要带 `web` 参数。装完先用 `cad_doctor` 做环境自检。（注意区分：npm 上另有 LAU-MARS 的 [`dsh-cad`](https://www.npmjs.com/package/dsh-cad)——CAD 查看器插件，与本包互补：本包负责建模出图，它负责在 Web 界面里看图）
-- **后端架构**：adapter 注册表 + 能力路由。v0.1 自带 CadQuery（OpenCASCADE 内核，原生 STEP）；OpenSCAD、ezdxf、FreeCAD 在路线图上；商业 CAD（SolidWorks/NX/CATIA/AutoCAD/中望/浩辰）通过中性格式（STEP/IGES/DXF）互操作，进程内桥接预留为独立插件包
-- **路由与开关**：`backendPriority` 控制多个后端同时可用时的优先级；`cadquery.enabled` 可整体关闭某个后端；`pythonPath` / `DSH_CAD_PYTHON` 指定解释器
+- **后端架构**：adapter 注册表 + 能力路由。自带 CadQuery（OpenCASCADE 内核，原生 STEP）和 ezdxf（2D DXF，内置生产验证的修复器：TEXT 对齐点补齐、CJK 字体预览重映射、白底 ACI7 处理）；OpenSCAD、FreeCAD 在路线图上；商业 CAD（SolidWorks/NX/CATIA/AutoCAD/中望/浩辰）通过中性格式（STEP/IGES/DXF）互操作，进程内桥接预留为独立插件包
+- **路由与开关**：工具按代码 import 自动识别后端（`import ezdxf` → 二维），也可用 `backend` 参数强制；`backendPriority` 控制多后端优先级；`cadquery.enabled` / `ezdxf.enabled` 可分别关闭；`pythonPath` / `DSH_CAD_PYTHON` 指定解释器
 - **注意**：工具会在本机执行 Python 代码（参数化 CAD 的工作方式），共享部署请配合 dsh 的 `tools/pre-execute` 权限门禁

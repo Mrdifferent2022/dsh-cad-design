@@ -8,7 +8,7 @@ import type { CadToolDeps } from './shared.ts'
 export function applyCadDoctor(deps: CadToolDeps): void {
   deps.ctx.tools.register(defineTool({
     name: 'cad_doctor',
-    description: 'Check which CAD backends (CadQuery, future OpenSCAD/FreeCAD/commercial CAD bridges) are available on this machine. Reports a capability matrix: parametric modeling, preview rendering, export formats (STEP/IGES/STL/3MF), and geometry analysis, plus install hints for anything missing. Call this first when a cad_* tool reports no available backend.',
+    description: 'Check which CAD backends (CadQuery 3D, ezdxf 2D DXF, future OpenSCAD/FreeCAD/commercial CAD bridges) are available on this machine. Reports a capability matrix: parametric modeling, preview rendering, export formats (STEP/IGES/STL/3MF/DXF), and geometry analysis, plus install hints for anything missing. Call this first when a cad_* tool reports no available backend.',
     parameters: {},
     output: {
       schema: {
@@ -62,7 +62,12 @@ export function applyCadDoctor(deps: CadToolDeps): void {
           displayName: adapter.displayName,
           available: status.available,
           ...adapter.capabilities.parametricModeling !== undefined
-            ? { modelingLanguage: adapter.capabilities.parametricModeling.language }
+            ? {
+              modelingLanguage: adapter.capabilities.parametricModeling.language
+                + (adapter.capabilities.parametricModeling.dimensions !== undefined
+                  ? ` (${adapter.capabilities.parametricModeling.dimensions})`
+                  : ''),
+            }
             : {},
           exportFormats: [...adapter.capabilities.exportFormats],
           ...status.executablePath !== undefined ? { executablePath: status.executablePath } : {},

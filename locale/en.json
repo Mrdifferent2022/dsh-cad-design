@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "CAD Tools",
-    "description": "Parametric mechanical CAD: CadQuery modeling, STEP/STL export, and design preview. Requires Python with CadQuery installed."
+    "description": "Parametric mechanical CAD: CadQuery 3D modeling, ezdxf 2D DXF drafting, STEP/STL/DXF export, and design preview. Requires Python with CadQuery and/or ezdxf installed."
   }
 }

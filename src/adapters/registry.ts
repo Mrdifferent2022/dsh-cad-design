@@ -72,6 +72,7 @@ export class AdapterRegistry {
 
 /** Pure capability match, independent of machine availability. */
 export function satisfies(adapter: CadAdapter, request: CapabilityRequest): boolean {
+  if (request.backend !== undefined && adapter.id !== request.backend) return false
   const caps = adapter.capabilities
   switch (request.kind) {
     case 'model':

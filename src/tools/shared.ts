@@ -5,6 +5,7 @@ import type { AdapterRegistry } from '../adapters/registry.ts'
 import type { CadAdapter, CapabilityRequest } from '../adapters/types.ts'
 import type { Config } from '../config.ts'
 import { DEFAULT_TIMEOUT_SECONDS } from '../config.ts'
+import { sniffBackend } from '../util/sniff.ts'
 import { createWorkDir, resolveBaseDir, type CadWorkDir } from '../util/workdir.ts'
 
 /** Services every cad tool closes over. */
@@ -24,6 +25,30 @@ export async function requireAdapter(
   if (adapter === undefined) {
     throw new Error(
       'no available CAD backend satisfies this request. Run cad_doctor to see what this machine supports and how to install a backend.',
+    )
+  }
+  return adapter
+}
+
+/**
+ * Resolve the adapter for modeling code: an explicit `backend` argument wins,
+ * then import sniffing (`import ezdxf` → ezdxf, `import cadquery` → cadquery),
+ * then plain capability routing in priority order. A named-but-unusable
+ * backend throws an error that names it, instead of silently rerouting.
+ */
+export async function requireAdapterForCode(
+  deps: CadToolDeps,
+  request: CapabilityRequest,
+  code: string,
+  explicitBackend: string | undefined,
+  signal: AbortSignal,
+): Promise<CadAdapter> {
+  const backend = explicitBackend ?? sniffBackend(code)
+  if (backend === undefined) return requireAdapter(deps, request, signal)
+  const adapter = await deps.registry.route({ ...request, backend }, signal)
+  if (adapter === undefined) {
+    throw new Error(
+      `backend "${backend}" ${explicitBackend !== undefined ? 'was requested but' : 'matches this code but'} is not available or does not support this operation. Run cad_doctor to see backend status and install hints.`,
     )
   }
   return adapter

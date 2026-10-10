@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "CAD 工具",
-    "description": "参数化机械 CAD：CadQuery 建模、STEP/STL 导出与设计预览。需要本机安装 Python 与 CadQuery。"
+    "description": "参数化机械 CAD：CadQuery 三维建模、ezdxf 二维 DXF 制图、STEP/STL/DXF 导出与设计预览。需要本机安装 Python 与 CadQuery 和/或 ezdxf。"
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "dsh-cad-design",
-  "description": "Parametric CAD tools for the DeepSeek Harness: CadQuery modeling, STEP export, and design preview",
-  "version": "0.1.0",
+  "description": "Parametric CAD tools for the DeepSeek Harness: CadQuery 3D modeling, ezdxf 2D DXF drafting, STEP/IGES/STL/3MF/DXF export, and design preview",
+  "version": "0.2.0",
   "license": "MIT",
   "author": "Mrdifferent2022 (https://github.com/Mrdifferent2022)",
   "repository": {

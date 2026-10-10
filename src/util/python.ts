@@ -1,4 +1,5 @@
 import { runProcess } from './proc.ts'
+import type { AdapterStatus } from '../adapters/types.ts'
 
 /** A resolved Python interpreter that can import a given module. */
 export interface PythonResolution {
@@ -64,6 +65,41 @@ export async function findPython(
 export function splitPythonCommand(executable: string): { command: string; prefixArgs: string[] } {
   if (executable === 'py -3') return { command: 'py', prefixArgs: ['-3'] }
   return { command: executable, prefixArgs: [] }
+}
+
+/**
+ * Shared detect() body for Python-backed adapters: resolve an interpreter,
+ * then require that it can import the backend module. Never throws.
+ */
+export async function detectPythonBackend(
+  configuredPath: string | undefined,
+  moduleName: string,
+  installHint: string,
+  signal: AbortSignal,
+): Promise<AdapterStatus> {
+  const python = await findPython(configuredPath, signal)
+  if (python === undefined) {
+    return {
+      available: false,
+      installHint,
+      missingReason: 'no working Python interpreter found (tried configured path, DSH_CAD_PYTHON, py launcher, python, python3)',
+    }
+  }
+  const moduleCheck = await checkPythonModule(python.executable, moduleName, signal)
+  if (!moduleCheck.ok) {
+    return {
+      available: false,
+      executablePath: python.executable,
+      ...(python.version !== undefined ? { version: `Python ${python.version}` } : {}),
+      installHint,
+      missingReason: `${moduleName} is not importable: ${moduleCheck.error ?? 'unknown error'}`,
+    }
+  }
+  return {
+    available: true,
+    executablePath: python.executable,
+    version: `${moduleName} ${moduleCheck.version ?? 'unknown'} / Python ${python.version ?? 'unknown'}`,
+  }
 }
 
 /**

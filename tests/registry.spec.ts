@@ -44,6 +44,12 @@ describe('satisfies', () => {
     expect(satisfies(bare, { kind: 'model' })).toBe(false)
     expect(satisfies(bare, { kind: 'preview' })).toBe(false)
   })
+
+  it('honors an explicit backend id pin', () => {
+    const full = fakeAdapter({ id: 'a', modeling: true })
+    expect(satisfies(full, { kind: 'model', backend: 'a' })).toBe(true)
+    expect(satisfies(full, { kind: 'model', backend: 'b' })).toBe(false)
+  })
 })
 
 describe('AdapterRegistry', () => {
@@ -83,17 +89,19 @@ describe('AdapterRegistry', () => {
 })
 
 describe('buildAdapters (config routing & switches)', () => {
-  it('includes cadquery by default', () => {
-    expect(buildAdapters({}).map(a => a.id)).toEqual(['cadquery'])
+  it('includes cadquery and ezdxf by default, cadquery first', () => {
+    expect(buildAdapters({}).map(a => a.id)).toEqual(['cadquery', 'ezdxf'])
   })
 
   it('drops disabled backends', () => {
-    expect(buildAdapters({ cadquery: { enabled: false } })).toEqual([])
+    expect(buildAdapters({ cadquery: { enabled: false } }).map(a => a.id)).toEqual(['ezdxf'])
+    expect(buildAdapters({ ezdxf: { enabled: false } }).map(a => a.id)).toEqual(['cadquery'])
+    expect(buildAdapters({ cadquery: { enabled: false }, ezdxf: { enabled: false } })).toEqual([])
   })
 
   it('honors backendPriority ordering and ignores unknown ids', () => {
-    const adapters = buildAdapters({ backendPriority: ['openscad', 'cadquery'] })
-    expect(adapters.map(a => a.id)).toEqual(['cadquery'])
+    const adapters = buildAdapters({ backendPriority: ['openscad', 'ezdxf', 'cadquery'] })
+    expect(adapters.map(a => a.id)).toEqual(['ezdxf', 'cadquery'])
   })
 
   it('passes the pythonPath override through', () => {

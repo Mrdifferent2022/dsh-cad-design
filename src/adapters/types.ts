@@ -36,10 +36,12 @@ export const FORMAT_BY_EXTENSION: Readonly<Record<string, CadFormat>> = {
 
 /** What one adapter can do; tools query capabilities, never adapter identity. */
 export interface CadCapabilities {
-  /** Text-driven parametric modeling (agent writes code → solid). */
+  /** Text-driven parametric modeling (agent writes code → geometry). */
   readonly parametricModeling?: {
     readonly language: 'python' | 'openscad'
     readonly headless: boolean
+    /** 3D solid modeling vs 2D engineering drafting. */
+    readonly dimensions?: '2d' | '3d'
   }
   /** Headless preview rendering. */
   readonly renderPreview?: {
@@ -91,6 +93,12 @@ export interface CadFacts {
     readonly size: readonly [number, number, number]
   }
   readonly valid_geometry?: boolean
+  /** 2D drawings (DXF): entity count in the target layout. */
+  readonly entities?: number
+  /** 2D drawings: layer names present in the drawing. */
+  readonly layers?: readonly string[]
+  /** 2D drawings: aligned TEXT entities repaired before save/render. */
+  readonly texts_fixed?: number
 }
 
 /** Normalized job outcome. Domain failures throw; this shape is success. */
@@ -122,6 +130,6 @@ export interface CadAdapter {
 
 /** Capability query used by tools to pick an adapter. */
 export type CapabilityRequest =
-  | { readonly kind: 'model' }
-  | { readonly kind: 'preview' }
-  | { readonly kind: 'export'; readonly format: CadFormat }
+  | { readonly kind: 'model'; readonly backend?: string }
+  | { readonly kind: 'preview'; readonly backend?: string }
+  | { readonly kind: 'export'; readonly format: CadFormat; readonly backend?: string }
