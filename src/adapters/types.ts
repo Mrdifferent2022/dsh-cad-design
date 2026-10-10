@@ -69,10 +69,12 @@ export interface AdapterStatus {
 
 /** One modeling/render/export job, normalized across adapters. */
 export interface CadJob {
-  readonly mode: 'validate' | 'render' | 'export'
-  /** Modeling source code in the adapter's language. */
+  readonly mode: 'validate' | 'render' | 'export' | 'convert'
+  /** Modeling source code in the adapter's language (empty for convert). */
   readonly code: string
-  /** export mode: absolute output path; extension selects the format. */
+  /** convert mode: absolute source file path; extension selects the format. */
+  readonly inputPath?: string
+  /** export/convert mode: absolute output path; extension selects the format. */
   readonly outputPath?: string
   /** render mode: preview paths the runner should try to produce. */
   readonly svgPath?: string
@@ -133,3 +135,4 @@ export type CapabilityRequest =
   | { readonly kind: 'model'; readonly backend?: string }
   | { readonly kind: 'preview'; readonly backend?: string }
   | { readonly kind: 'export'; readonly format: CadFormat; readonly backend?: string }
+  | { readonly kind: 'convert'; readonly from: CadFormat; readonly to: CadFormat; readonly backend?: string }

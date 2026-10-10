@@ -19,6 +19,7 @@ import { applyCadDoctor } from './tools/doctor.ts'
 import { applyCadValidate } from './tools/validate.ts'
 import { applyCadRender } from './tools/render.ts'
 import { applyCadExport } from './tools/export.ts'
+import { applyCadConvert } from './tools/convert.ts'
 import {
   CADQUERY_DESIGN_SKILL,
   CADQUERY_DESIGN_SKILL_DESCRIPTION,
@@ -89,6 +90,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   applyCadValidate(deps)
   applyCadRender(deps)
   applyCadExport(deps)
+  applyCadConvert(deps)
 
   if (config.enableSkill !== false) {
     ctx.skills.register({

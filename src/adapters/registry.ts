@@ -81,5 +81,7 @@ export function satisfies(adapter: CadAdapter, request: CapabilityRequest): bool
       return caps.renderPreview !== undefined
     case 'export':
       return caps.exportFormats.includes(request.format)
+    case 'convert':
+      return caps.importFormats.includes(request.from) && caps.exportFormats.includes(request.to)
   }
 }

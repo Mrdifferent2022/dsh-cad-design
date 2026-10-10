@@ -83,6 +83,27 @@ describe.skipIf(!status.available)('cadquery e2e (real backend)', () => {
     }
   })
 
+  it('convert turns a STEP file into STL', async () => {
+    const work = await makeWork('result = cq.Workplane("XY").box(10, 10, 4)\n')
+    const stepPath = join(work.dir, 'part.step')
+    const stlPath = join(work.dir, 'part.stl')
+    try {
+      await adapter.run(
+        { mode: 'export', code: '', workDir: work.dir, outputPath: stepPath },
+        new AbortController().signal,
+      )
+      const result = await adapter.run(
+        { mode: 'convert', code: '', workDir: work.dir, inputPath: stepPath, outputPath: stlPath },
+        new AbortController().signal,
+      )
+      expect(result.outputPath).toBe(stlPath)
+      expect(result.bytes).toBeGreaterThan(100)
+      expect(result.facts?.volume_mm3).toBe(400)
+    } finally {
+      await rm(work.dir, { recursive: true, force: true })
+    }
+  })
+
   it('handles a non-ASCII (CJK) work directory', async () => {
     const base = await mkdtemp(join(tmpdir(), 'dsh-cad-零件-'))
     const code = 'import cadquery as cq\nresult = cq.Workplane("XY").box(3, 3, 3)\n'

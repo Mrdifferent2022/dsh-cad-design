@@ -54,6 +54,7 @@ export async function runPythonRunnerJob(
     mode: job.mode,
     script_path: `${job.workDir}/model.py`,
   }
+  if (job.inputPath !== undefined) jobPayload['input_path'] = job.inputPath
   if (job.outputPath !== undefined) jobPayload['output_path'] = job.outputPath
   if (job.svgPath !== undefined) jobPayload['svg_out'] = job.svgPath
   if (job.pngPath !== undefined) jobPayload['png_out'] = job.pngPath

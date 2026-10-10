@@ -114,6 +114,33 @@ describe.skipIf(!status.available)('ezdxf e2e (real backend)', () => {
     }
   })
 
+  it('convert rewrites a DXF (repair pass applies TEXT fixes)', async () => {
+    const work = await makeWork(
+      'result = doc = ezdxf.new()\n'
+      + 'msp = doc.modelspace()\n'
+      + 't = msp.add_text("修复测试", height=3.5)\n'
+      + 't.dxf.halign = 1\n'
+      + 'msp.add_circle((0, 0), 25)\n',
+    )
+    const inputPath = join(work.dir, 'in.dxf')
+    const outputPath = join(work.dir, 'out.dxf')
+    try {
+      await adapter.run(
+        { mode: 'export', code: '', workDir: work.dir, outputPath: inputPath },
+        new AbortController().signal,
+      )
+      const result = await adapter.run(
+        { mode: 'convert', code: '', workDir: work.dir, inputPath, outputPath },
+        new AbortController().signal,
+      )
+      expect(result.outputPath).toBe(outputPath)
+      expect(result.bytes).toBeGreaterThan(1000)
+      expect(result.facts?.entities).toBe(2)
+    } finally {
+      await rm(work.dir, { recursive: true, force: true })
+    }
+  })
+
   it('handles a non-ASCII (CJK) work directory', async () => {
     const base = await mkdtemp(join(tmpdir(), 'dsh-cad-图纸-'))
     const code = 'import ezdxf\nresult = doc = ezdxf.new()\ndoc.modelspace().add_circle((0, 0), 10)\n'

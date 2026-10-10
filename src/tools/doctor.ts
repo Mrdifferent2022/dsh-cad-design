@@ -27,6 +27,7 @@ export function applyCadDoctor(deps: CadToolDeps): void {
                 available: { type: 'boolean', required: true },
                 modelingLanguage: { type: 'string' },
                 exportFormats: { type: 'array', items: { type: 'string' }, required: true },
+                importFormats: { type: 'array', items: { type: 'string' }, required: true },
                 executablePath: { type: 'string' },
                 version: { type: 'string' },
                 installHint: { type: 'string' },
@@ -45,6 +46,7 @@ export function applyCadDoctor(deps: CadToolDeps): void {
           if (backend.executablePath !== undefined) details.push(`  executable: ${backend.executablePath}`)
           if (backend.modelingLanguage !== undefined) details.push(`  modeling: ${backend.modelingLanguage}`)
           details.push(`  export formats: ${backend.exportFormats.length > 0 ? backend.exportFormats.join(', ') : '(none)'}`)
+          details.push(`  import formats: ${backend.importFormats.length > 0 ? backend.importFormats.join(', ') : '(none)'}`)
           if (!backend.available) {
             if (backend.missingReason !== undefined) details.push(`  missing: ${backend.missingReason}`)
             if (backend.installHint !== undefined) details.push(`  install: ${backend.installHint}`)
@@ -70,6 +72,7 @@ export function applyCadDoctor(deps: CadToolDeps): void {
             }
             : {},
           exportFormats: [...adapter.capabilities.exportFormats],
+          importFormats: [...adapter.capabilities.importFormats],
           ...status.executablePath !== undefined ? { executablePath: status.executablePath } : {},
           ...status.version !== undefined ? { version: status.version } : {},
           ...status.installHint !== undefined && !status.available ? { installHint: status.installHint } : {},

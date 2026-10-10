@@ -50,6 +50,18 @@ describe('satisfies', () => {
     expect(satisfies(full, { kind: 'model', backend: 'a' })).toBe(true)
     expect(satisfies(full, { kind: 'model', backend: 'b' })).toBe(false)
   })
+
+  it('matches convert requests on import+export format pairs', () => {
+    const converter = fakeAdapter({ id: 'conv', exportFormats: ['stl'] })
+    // fakeAdapter has importFormats: [] — give it a readable format
+    const readable: CadAdapter = {
+      ...converter,
+      capabilities: { ...converter.capabilities, importFormats: ['step'] },
+    }
+    expect(satisfies(readable, { kind: 'convert', from: 'step', to: 'stl' })).toBe(true)
+    expect(satisfies(readable, { kind: 'convert', from: 'dxf', to: 'stl' })).toBe(false)
+    expect(satisfies(readable, { kind: 'convert', from: 'step', to: 'step' })).toBe(false)
+  })
 })
 
 describe('AdapterRegistry', () => {

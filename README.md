@@ -52,6 +52,7 @@ Or from a tarball: `dsh plugin --profile web add ./dsh-cad-design-0.1.0.tgz`
 | `cad_validate` | Execute CadQuery (3D) or ezdxf (2D) code and check validity (`valid: false` is a domain result, not a crash). Backend auto-detected from imports or pinned with `backend`. |
 | `cad_render` | Produce a preview (PNG when possible, SVG always) + facts (volume/bbox for 3D; entities/layers/repairs for 2D). Attaches the image when the current model supports image input; otherwise degrades to text + facts. |
 | `cad_export` | Export STEP / IGES / STL / 3MF (CadQuery) or DXF (ezdxf). Never silently overwrites (`overwrite: true` to force). |
+| `cad_convert` | File→file conversion: STEP/BREP → STEP/IGES/STL/3MF (CadQuery), DXF → DXF repair-and-normalize (ezdxf tolerant read + audit + TEXT repair + rewrite). |
 
 Plus two auto-registered skills: **`cadquery-design`** (the `result` contract, mm units, Workplane selection rules, mechanical pattern library: cbore holes, nut traps, bolt-circle flanges, bearing seats, ribs, D-shaft bores) and **`ezdxf-drafting`** (2D contract, layer/linetype conventions, CJK-safe text styles, dimension patterns, and the pitfalls the runner auto-repairs).
 
@@ -102,7 +103,7 @@ pnpm dsh web --patch /absolute/path/to/dsh-cad/cordis.dev.yml
 
 ## Roadmap
 
-- **v0.2** — ✅ ezdxf adapter (2D DXF drafting with CJK font handling and TEXT repair); still to come: OpenSCAD adapter, `cad_convert` (file→file)
+- **v0.2** — ✅ ezdxf adapter (2D DXF drafting with CJK font handling and TEXT repair); ✅ `cad_convert` (file→file); still to come: OpenSCAD adapter
 - **v0.3** — FreeCAD adapter (GB-standard engineering drawings), DWG via ODA File Converter
 - **v1.0** — richer facts (mass, inertia), larger pattern libraries, drawing templates
 - **later (separate packages)** — `dsh-cad-autocad` (accoreconsole/LISP), `dsh-cad-zwcad` / `dsh-cad-gstarcad` (COM-compatible), `dsh-cad-solidworks`, `dsh-cad-nx`

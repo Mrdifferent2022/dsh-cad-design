@@ -128,6 +128,20 @@ def compute_facts(shapes):
     return facts
 
 
+def import_shapes(input_path):
+    """Read a B-rep exchange file into cadquery Shapes (convert mode)."""
+    import cadquery as cq
+
+    ext = os.path.splitext(input_path)[1].lower()
+    if ext in (".step", ".stp"):
+        return collect_shapes(cq.importers.importStep(input_path))
+    if ext == ".brep":
+        return [cq.Shape.importBrep(input_path)]
+    raise RuntimeError(
+        f"unsupported import format: {ext or '(none)'} (supported: .step, .stp, .brep)"
+    )
+
+
 def export_shapes(shapes, output_path):
     """Export shapes to STEP/IGES/STL/3MF based on the file extension."""
     import cadquery as cq
@@ -289,15 +303,43 @@ def render_png(shapes, svg_path, png_out):
 def run_job(job):
     mode = job.get("mode")
     script_path = job.get("script_path")
-    if mode not in ("validate", "render", "export"):
+    if mode not in ("validate", "render", "export", "convert"):
         return {"success": False, "error": f"unknown mode: {mode}"}
-    if not script_path or not os.path.isfile(script_path):
-        return {"success": False, "error": f"script not found: {script_path}"}
 
     try:
         import cadquery as cq  # noqa: F401
     except Exception as e:
         return {"success": False, "error": f"cadquery not installed: {e}", "exit": 3}
+
+    # Convert mode reads a file instead of executing a user script.
+    if mode == "convert":
+        input_path = job.get("input_path")
+        output_path = job.get("output_path")
+        if not input_path or not output_path:
+            return {"success": False, "error": "convert mode needs input_path and output_path"}
+        if not os.path.isfile(input_path):
+            return {"success": False, "error": f"input not found: {input_path}"}
+        out_dir = os.path.dirname(os.path.abspath(output_path))
+        if out_dir and not os.path.isdir(out_dir):
+            os.makedirs(out_dir, exist_ok=True)
+        try:
+            shapes = import_shapes(input_path)
+            if not shapes:
+                raise RuntimeError("no geometry found in the input file")
+            export_shapes(shapes, output_path)
+        except Exception as e:  # noqa: BLE001
+            return {"success": False, "error": f"convert failed: {e}"}
+        return {
+            "success": True,
+            "facts": compute_facts(shapes),
+            "echo": [],
+            "warnings": [],
+            "output_path": output_path,
+            "bytes": os.path.getsize(output_path),
+        }
+
+    if not script_path or not os.path.isfile(script_path):
+        return {"success": False, "error": f"script not found: {script_path}"}
 
     with open(script_path, "r", encoding="utf-8") as fh:
         code = fh.read()

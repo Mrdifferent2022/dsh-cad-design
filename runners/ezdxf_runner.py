@@ -227,15 +227,59 @@ def export_dxf(doc, output_path):
 def run_job(job):
     mode = job.get("mode")
     script_path = job.get("script_path")
-    if mode not in ("validate", "render", "export"):
+    if mode not in ("validate", "render", "export", "convert"):
         return {"success": False, "error": f"unknown mode: {mode}"}
-    if not script_path or not os.path.isfile(script_path):
-        return {"success": False, "error": f"script not found: {script_path}"}
 
     try:
         import ezdxf  # noqa: F401
     except Exception as e:
         return {"success": False, "error": f"ezdxf not installed: {e}", "exit": 3}
+
+    # Convert mode reads a file instead of executing a user script: a tolerant
+    # read + audit + repair + rewrite pass that normalizes damaged DXF files.
+    if mode == "convert":
+        input_path = job.get("input_path")
+        output_path = job.get("output_path")
+        if not input_path or not output_path:
+            return {"success": False, "error": "convert mode needs input_path and output_path"}
+        for path, role in ((input_path, "input"), (output_path, "output")):
+            if os.path.splitext(path)[1].lower() != ".dxf":
+                return {"success": False, "error": f"ezdxf convert only handles .dxf {role} files"}
+        if not os.path.isfile(input_path):
+            return {"success": False, "error": f"input not found: {input_path}"}
+        try:
+            from ezdxf import recover
+            doc, auditor = recover.readfile(input_path)
+        except Exception as e:  # noqa: BLE001
+            return {"success": False, "error": f"cannot read input DXF: {e}"}
+        texts_fixed = fix_aligned_text_missing_align_point(doc)
+        entity_count = count_entities(doc.modelspace())
+        if entity_count == 0:
+            return {"success": False, "error": "input drawing has 0 entities in modelspace"}
+        facts = {"entities": entity_count, "layers": layer_names(doc)}
+        if texts_fixed:
+            facts["texts_fixed"] = texts_fixed
+        warnings = []
+        if auditor.has_errors:
+            warnings.append(f"input audit found {len(auditor.errors)} issue(s); repaired where possible")
+        out_dir = os.path.dirname(os.path.abspath(output_path))
+        if out_dir and not os.path.isdir(out_dir):
+            os.makedirs(out_dir, exist_ok=True)
+        try:
+            doc.saveas(output_path)
+        except Exception as e:  # noqa: BLE001
+            return {"success": False, "error": f"DXF rewrite failed: {e}"}
+        return {
+            "success": True,
+            "facts": facts,
+            "echo": [],
+            "warnings": warnings,
+            "output_path": output_path,
+            "bytes": os.path.getsize(output_path),
+        }
+
+    if not script_path or not os.path.isfile(script_path):
+        return {"success": False, "error": f"script not found: {script_path}"}
 
     with open(script_path, "r", encoding="utf-8") as fh:
         code = fh.read()

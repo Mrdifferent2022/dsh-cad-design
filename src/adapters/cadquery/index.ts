@@ -24,7 +24,7 @@ export class CadQueryAdapter implements CadAdapter {
     parametricModeling: { language: 'python', headless: true, dimensions: '3d' },
     renderPreview: { raster: true },
     exportFormats: ['step', 'iges', 'stl', '3mf'],
-    importFormats: [],
+    importFormats: ['step', 'brep'],
     analysis: true,
   }
 
