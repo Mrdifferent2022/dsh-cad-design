@@ -82,5 +82,6 @@
     "step",
     "mechanical-design",
     "parametric-modeling"
-  ]
+  ],
+  "packageManager": "pnpm@10.23.0"
 }

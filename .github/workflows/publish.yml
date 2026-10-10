@@ -1,0 +1,50 @@
+# Publish to npm via Trusted Publishing (OIDC) — no tokens, no OTP.
+# Trigger: push a version tag (`git tag v0.2.0 && git push origin v0.2.0`)
+# or run manually from the Actions tab.
+#
+# One-time setup (already done): npmjs.com package settings → Trusted
+# Publishers links this repo + this workflow filename. npm then accepts
+# publishes only from this exact workflow, exchanging GitHub's OIDC token
+# for a short-lived credential at publish time.
+name: publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  id-token: write # OIDC token for npm trusted publishing + provenance
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4 # version from package.json packageManager
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # Trusted publishing needs npm >= 11.5.1; the runner's bundled npm lags.
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # prepublishOnly also runs build+test; keep them explicit so a failure
+      # points at the step, not at the publish line.
+      - name: Build
+        run: pnpm run build
+
+      - name: Unit tests
+        run: pnpm run test
+
+      - name: Publish to npm
+        run: npm publish --provenance
