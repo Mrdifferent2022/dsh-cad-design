@@ -21,6 +21,9 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Must match the Environment on the npm trusted-publisher entry; npm
+    # compares it against the OIDC token's environment claim.
+    environment: gom-pc
     steps:
       - uses: actions/checkout@v5
 
