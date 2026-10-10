@@ -30,10 +30,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-
-      # Trusted publishing needs npm >= 11.5.1; the runner's bundled npm lags.
-      - name: Update npm
-        run: npm install -g npm@latest
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -46,5 +43,8 @@ jobs:
       - name: Unit tests
         run: pnpm run test
 
+      # npx pins the exact npm for the publish itself: a global upgrade is
+      # unreliable because setup-node's PATH shadows it. Trusted publishing
+      # needs npm >= 11.5.1. Verbose logging shows the OIDC exchange lines.
       - name: Publish to npm
-        run: npm publish --provenance
+        run: npx --yes npm@latest publish --provenance --loglevel verbose
